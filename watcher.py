@@ -15,7 +15,7 @@ def get_connection(url):
    if response.status_code == 511:
       webbrowser.open(url)
       print("Please validate your connection!")
-      time.wait(10)
+      time.sleep(10)
 
    return response
 
