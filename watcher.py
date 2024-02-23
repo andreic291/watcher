@@ -3,6 +3,8 @@ from bs4 import BeautifulSoup
 import webbrowser
 import time
 from price_parser import Price
+import mysql.connector
+import configparser
 
 #Connects to the URL and returns the HTTPS response
 def get_connection(url):
@@ -57,13 +59,92 @@ def get_product_title(url):
    soup = get_soup(get_connection(url))
    return soup.title.text
 
+#Connect to the database and initialize the cursor
+def connect_to_db():
+   config = configparser.ConfigParser()
+   config.read("db_config.ini")
+
+   conn = mysql.connector.connect(
+      host = config.get('Database','host'),
+      user = config.get('Database','user'),
+      password = config.get('Database','password'),
+      database = config.get('Database','database')
+   )
+   cursor = conn.cursor()
+   return conn,cursor
+
+#Add a product to the database
+def add_product_watch(url, conn, cursor):
+   command = (
+      "INSERT INTO test (id, Name, URL, Price) "
+      "VALUES (NULL, %s, %s, %s)"
+   )
+   data = (get_product_title(url), url, current_price(url))
+   cursor.execute(command,data)
+   conn.commit()
+
+#Fetch the price of a product from the database
+def fetch_product_price(url, cursor):
+   command = (
+      "SELECT Price FROM test WHERE test.URL = %s"
+   )
+   data = (url,)
+   cursor.execute(command,data)
+   price = cursor.fetchone()[0]
+   return price
+
+#Delete a product from the database
+def delete_product_watch(url, conn, cursor):
+   command = (
+      "DELETE FROM test WHERE test.URL = %s"
+   )
+   data = (url,)
+   cursor.execute(command,data)
+   conn.commit()
+
+#Print a list of all products currently in the database
+def show_all_products(cursor):
+   command = (
+      "SELECT Name FROM test"
+   )
+   cursor.execute(command)
+   names = cursor.fetchall()
+   for name in names:
+      print(name[0])
+
+
+#All the available interaction options with the database
+def interact_with_db():
+   conn, cursor = connect_to_db()
+
+   mode = input("Please select the action you would like to perform [names/check/add/remove]: ")
+
+   if mode == "names":
+      print("All products currently watched:")
+      show_all_products(cursor)
+   elif mode == "add":
+      link = input("Please provide the URL of the product you would like to add to the watchlist: ")
+      add_product_watch(link,conn,cursor)
+      print("Product added to watchlist")
+   elif mode == "check":
+      link = input("Please provide the URL of the product you would like to check: ")
+      print("Current price is: "+ str(fetch_product_price(link,cursor)))
+   elif mode == "remove":
+      link = input("Please provide the URL of the product you would like to remove from the watchlist: ")
+      delete_product_watch(link, conn, cursor)
+      print("Product removed from watchlist")
+   else:
+      print("No option with this name!")
+   
+   if input("Would you like to perform another action? [y/n]: ") == "y":
+      interact_with_db()
+
+   if conn.is_connected() == True:
+      conn.close()
 
 #Hard coded test links
 link_fail = "https://altex.ro/chiuveta-bucatarie-pyramis-altexia-1b1d-70098801-1-cuva-gri/cpd/CVTALTEXI7644CA/"
-link = "https://www.emag.ro/set-2-cutie-organizator-medicamente-portabil-amrhaw-plastic-negru-jitoo22740009/pd/DMTPX3YBM/?ref=sponsored_products_p_r_ra_5_2&provider=rec-ads&recid=recads_2_c569e47245778993cb6313c4438115f67244e37ac6628e54061343452949adc0_1708513795&scenario_ID=2&aid=2d330f21-9276-11ee-8d28-0229d980bfff&oid=137169870/"
+link3 = "https://www.emag.ro/set-2-cutie-organizator-medicamente-portabil-amrhaw-plastic-negru-jitoo22740009/pd/DMTPX3YBM/?ref=sponsored_products_p_r_ra_5_2&provider=rec-ads&recid=recads_2_c569e47245778993cb6313c4438115f67244e37ac6628e54061343452949adc0_1708513795&scenario_ID=2&aid=2d330f21-9276-11ee-8d28-0229d980bfff&oid=137169870/"
+link2 = "https://www.emag.ro/set-12-martisoare-bratari-nevermore-fluture-colorate-lungime-reglabila-rosu-n1006/pd/DK9X0KYBM/"
 
-old_price = "33,32 lei"
-
-#print(compare_price(old_price,current_price(link)))
-print(get_product_title(link))
-print(current_price(link))
+interact_with_db()
