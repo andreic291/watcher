@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import webbrowser
 import time
+from price_parser import Price
 
 #Connects to the URL and returns the HTTPS response
 def get_connection(url):
@@ -15,7 +16,9 @@ def get_connection(url):
    if response.status_code == 511:
       webbrowser.open(url)
       print("Please validate your connection!")
-      time.sleep(10)
+      time.sleep(5)
+      #Restart the function in case of a 511 response
+      get_connection(url)
 
    return response
 
@@ -43,6 +46,11 @@ def compare_price(old_price,current_price):
       return "No changes"
    else:
       return "The price changed from " + old_price + " to " + current_price
+   
+#Get the string price and make it float
+def parse_price(str_price):
+   price = Price.fromstring(str_price)
+   return price.amount_float
 
 #Hard coded test links
 link_fail = "https://altex.ro/chiuveta-bucatarie-pyramis-altexia-1b1d-70098801-1-cuva-gri/cpd/CVTALTEXI7644CA/"
@@ -50,4 +58,5 @@ link = "https://www.emag.ro/set-2-cutie-organizator-medicamente-portabil-amrhaw-
 
 old_price = "33,32 lei"
 
-print(compare_price(old_price,current_price(link)))
+#print(compare_price(old_price,current_price(link)))
+print(parse_price(old_price))
