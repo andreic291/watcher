@@ -5,6 +5,7 @@ import time
 from price_parser import Price
 import mysql.connector
 import configparser
+import logging
 
 #Connects to the URL and returns the HTTPS response
 def get_connection(url):
@@ -79,9 +80,11 @@ def add_product_watch(url, conn, cursor):
       "INSERT INTO test (id, Name, URL, Price) "
       "VALUES (NULL, %s, %s, %s)"
    )
-   data = (get_product_title(url), url, current_price(url))
+   title = get_product_title(url)
+   data = (title, url, current_price(url))
    cursor.execute(command,data)
    conn.commit()
+   log_event('add', title)
 
 #Fetch the price of a product from the database
 def fetch_product_price(id, cursor):
@@ -116,9 +119,11 @@ def delete_product_watch(id, conn, cursor):
    command = (
       "DELETE FROM test WHERE test.id = %s"
    )
+   title = fetch_product_name(id, cursor)
    data = (id,)
    cursor.execute(command,data)
    conn.commit()
+   log_event('delete', title)
 
 #Print a list of all products currently in the database with their ID
 def list_all_products(cursor):
@@ -174,6 +179,26 @@ def interact_with_db():
 
    if conn.is_connected() == True:
       conn.close()
+
+#Log events like adding, deleting and checking products from the watchlist
+def log_event(type,arg):
+   
+   ADD = 27
+   DELETE = 26
+   CHECK = 25
+   logging.addLevelName(ADD, 'ADD')
+   logging.addLevelName(DELETE, 'DELETE')
+   logging.addLevelName(CHECK, 'CHECK')
+
+   FORMAT = '%(levelname)s - %(asctime)s - %(message)s'
+   logging.basicConfig(filename = "test.log", level = logging.INFO, format= FORMAT)
+
+   if type == 'add':
+      logging.log(ADD, "Product (" + arg + ") has been added to the watchlist")
+   elif type == 'delete':
+      logging.log(DELETE, "Product (" + arg + ") has been removed from the watchlist")
+   elif type == 'check':
+      logging.log(CHECK, "Test")
 
 #Hard coded test links
 link_fail = "https://altex.ro/chiuveta-bucatarie-pyramis-altexia-1b1d-70098801-1-cuva-gri/cpd/CVTALTEXI7644CA/"
