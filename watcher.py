@@ -96,13 +96,27 @@ def fetch_product_price(id, cursor):
       return price
    except TypeError:
       return None
+   
+#Fetch the name of a product from the database
+def fetch_product_name(id, cursor):
+   command = (
+      "SELECT Name FROM test WHERE test.id = %s"
+   )
+   data = (id,)
+   #Handle a wrong ID
+   try:
+      cursor.execute(command,data)
+      name = cursor.fetchone()[0]
+      return name
+   except TypeError:
+      return None
 
 #Delete a product from the database
-def delete_product_watch(url, conn, cursor):
+def delete_product_watch(id, conn, cursor):
    command = (
-      "DELETE FROM test WHERE test.URL = %s"
+      "DELETE FROM test WHERE test.id = %s"
    )
-   data = (url,)
+   data = (id,)
    cursor.execute(command,data)
    conn.commit()
 
@@ -126,10 +140,12 @@ def interact_with_db():
    if mode == "list":
       print("All products currently watched:")
       list_all_products(cursor)
+
    elif mode == "add":
       link = input("Please provide the URL of the product you would like to add to the watchlist: ")
       add_product_watch(link,conn,cursor)
       print("Product added to watchlist")
+
    elif mode == "check":
       id = input("Please provide the ID of the product you would like to check: ")
       price = fetch_product_price(id,cursor)
@@ -137,10 +153,19 @@ def interact_with_db():
          print("Current price is: "+ str(price))
       else:
          print("No product with the given ID!")
+
    elif mode == "remove":
-      link = input("Please provide the URL of the product you would like to remove from the watchlist: ")
-      delete_product_watch(link, conn, cursor)
-      print("Product removed from watchlist")
+      id = input("Please provide the ID of the product you would like to remove from the watchlist: ")
+      prod_name = fetch_product_name(id,cursor)
+      if prod_name != None:
+         if input("Are you sure you want to remove: " + str(prod_name) + " from the watchlist? [y/n]: ") == "y":
+            delete_product_watch(id, conn, cursor)
+            print("Product removed from watchlist")
+         else:
+            print("Operation aborted!")
+      else:
+         print("No product with the given ID!")
+
    else:
       print("No option with this name!")
    
@@ -153,6 +178,6 @@ def interact_with_db():
 #Hard coded test links
 link_fail = "https://altex.ro/chiuveta-bucatarie-pyramis-altexia-1b1d-70098801-1-cuva-gri/cpd/CVTALTEXI7644CA/"
 link3 = "https://www.emag.ro/set-2-cutie-organizator-medicamente-portabil-amrhaw-plastic-negru-jitoo22740009/pd/DMTPX3YBM/?ref=sponsored_products_p_r_ra_5_2&provider=rec-ads&recid=recads_2_c569e47245778993cb6313c4438115f67244e37ac6628e54061343452949adc0_1708513795&scenario_ID=2&aid=2d330f21-9276-11ee-8d28-0229d980bfff&oid=137169870/"
-link2 = "https://www.emag.ro/set-12-martisoare-bratari-nevermore-fluture-colorate-lungime-reglabila-rosu-n1006/pd/DK9X0KYBM/"
+link2 = "https://www.emag.ro/set-12-martisoare-bratari-nevermore-fluture-colorate-lungime-reglabila-rosu-n1006/pd/DK9X0KYBM"
 
 interact_with_db()
