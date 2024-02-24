@@ -84,14 +84,18 @@ def add_product_watch(url, conn, cursor):
    conn.commit()
 
 #Fetch the price of a product from the database
-def fetch_product_price(url, cursor):
+def fetch_product_price(id, cursor):
    command = (
-      "SELECT Price FROM test WHERE test.URL = %s"
+      "SELECT Price FROM test WHERE test.id = %s"
    )
-   data = (url,)
-   cursor.execute(command,data)
-   price = cursor.fetchone()[0]
-   return price
+   data = (id,)
+   #Handle a wrong ID
+   try:
+      cursor.execute(command,data)
+      price = cursor.fetchone()[0]
+      return price
+   except TypeError:
+      return None
 
 #Delete a product from the database
 def delete_product_watch(url, conn, cursor):
@@ -102,33 +106,37 @@ def delete_product_watch(url, conn, cursor):
    cursor.execute(command,data)
    conn.commit()
 
-#Print a list of all products currently in the database
-def show_all_products(cursor):
+#Print a list of all products currently in the database with their ID
+def list_all_products(cursor):
    command = (
-      "SELECT Name FROM test"
+      "SELECT id, Name FROM test"
    )
    cursor.execute(command)
-   names = cursor.fetchall()
-   for name in names:
-      print(name[0])
+   id_names = cursor.fetchall()
+   for id_name in id_names:
+      print("ID = " + str(id_name[0]),"=> " + str(id_name[1]))
 
 
 #All the available interaction options with the database
 def interact_with_db():
    conn, cursor = connect_to_db()
 
-   mode = input("Please select the action you would like to perform [names/check/add/remove]: ")
+   mode = input("Please select the action you would like to perform [list/check/add/remove]: ")
 
-   if mode == "names":
+   if mode == "list":
       print("All products currently watched:")
-      show_all_products(cursor)
+      list_all_products(cursor)
    elif mode == "add":
       link = input("Please provide the URL of the product you would like to add to the watchlist: ")
       add_product_watch(link,conn,cursor)
       print("Product added to watchlist")
    elif mode == "check":
-      link = input("Please provide the URL of the product you would like to check: ")
-      print("Current price is: "+ str(fetch_product_price(link,cursor)))
+      id = input("Please provide the ID of the product you would like to check: ")
+      price = fetch_product_price(id,cursor)
+      if price != None:
+         print("Current price is: "+ str(price))
+      else:
+         print("No product with the given ID!")
    elif mode == "remove":
       link = input("Please provide the URL of the product you would like to remove from the watchlist: ")
       delete_product_watch(link, conn, cursor)
