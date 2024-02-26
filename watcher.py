@@ -210,15 +210,11 @@ def auto_check(conn,cursor):
          data = (price_now,url_price_name[2])
          cursor.execute(command,data)
          conn.commit()
-   # print("Check completed")
-   # print("Sleeping for 5 min!")
-   # time.sleep(300)
-   # auto_check(conn,cursor)
-  
+
 #Compares the last recorded price and the current price and returns the change if any 
 def compare_price(old_price,current_price,product_name):
    if old_price == current_price:
-      log_event('check', product_name + " price hasn't changed!")
+      log_event('check', product_name + " - price hasn't changed!")
    elif old_price < current_price:
       price_change = current_price - old_price
       log_event('check', product_name + " - price incresed by " + str(price_change))
@@ -227,13 +223,3 @@ def compare_price(old_price,current_price,product_name):
       price_change = old_price - current_price
       log_event('check', product_name + " - price decresed by " + str(price_change))
       return 'change'
-
-#Hard coded test links
-link_fail = "https://altex.ro/chiuveta-bucatarie-pyramis-altexia-1b1d-70098801-1-cuva-gri/cpd/CVTALTEXI7644CA/"
-link3 = "https://www.emag.ro/set-2-cutie-organizator-medicamente-portabil-amrhaw-plastic-negru-jitoo22740009/pd/DMTPX3YBM/?ref=sponsored_products_p_r_ra_5_2&provider=rec-ads&recid=recads_2_c569e47245778993cb6313c4438115f67244e37ac6628e54061343452949adc0_1708513795&scenario_ID=2&aid=2d330f21-9276-11ee-8d28-0229d980bfff&oid=137169870/"
-link2 = "https://www.emag.ro/set-12-martisoare-bratari-nevermore-fluture-colorate-lungime-reglabila-rosu-n1006/pd/DK9X0KYBM"
-
-#interact_with_db()
-conn,cursor = connect_to_db()
-auto_check(conn,cursor)
-conn.close()
