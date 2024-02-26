@@ -70,7 +70,7 @@ def connect_to_db():
 #Add a product to the database
 def add_product_watch(url, conn, cursor):
    command = (
-      "INSERT INTO test (id, Name, URL, Price) "
+      "INSERT INTO watcher (id, Name, URL, Price) "
       "VALUES (NULL, %s, %s, %s)"
    )
    title = get_product_title(url)
@@ -82,7 +82,7 @@ def add_product_watch(url, conn, cursor):
 #Fetch the price of a product from the database
 def fetch_product_price(id, cursor):
    command = (
-      "SELECT Price FROM test WHERE test.id = %s"
+      "SELECT Price FROM watcher WHERE watcher.id = %s"
    )
    data = (id,)
    #Handle a wrong ID
@@ -96,7 +96,7 @@ def fetch_product_price(id, cursor):
 #Fetch the name of a product from the database
 def fetch_product_name(id, cursor):
    command = (
-      "SELECT Name FROM test WHERE test.id = %s"
+      "SELECT Name FROM watcher WHERE watcher.id = %s"
    )
    data = (id,)
    #Handle a wrong ID
@@ -110,7 +110,7 @@ def fetch_product_name(id, cursor):
 #Delete a product from the database
 def delete_product_watch(id, conn, cursor):
    command = (
-      "DELETE FROM test WHERE test.id = %s"
+      "DELETE FROM watcher WHERE watcher.id = %s"
    )
    title = fetch_product_name(id, cursor)
    data = (id,)
@@ -121,7 +121,7 @@ def delete_product_watch(id, conn, cursor):
 #Print a list of all products currently in the database with their ID
 def list_all_products(cursor):
    command = (
-      "SELECT id, Name FROM test"
+      "SELECT id, Name FROM watcher"
    )
    cursor.execute(command)
    id_names = cursor.fetchall()
@@ -183,8 +183,8 @@ def log_event(type,arg):
    logging.addLevelName(DELETE, 'DELETE')
    logging.addLevelName(CHECK, 'CHECK')
 
-   FORMAT = '%(levelname)s - %(asctime)s - %(message)s'
-   logging.basicConfig(filename = "test.log", level = logging.INFO, format= FORMAT)
+   FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
+   logging.basicConfig(filename = "watcher.log", level = logging.INFO, format= FORMAT)
 
    if type == 'add':
       logging.log(ADD, "Product (" + arg + ") has been added to the watchlist")
@@ -196,7 +196,7 @@ def log_event(type,arg):
 #Runs auto checks for price changes every n hours
 def auto_check(conn,cursor):
    command = (
-      "SELECT URL, Price, Name FROM test"
+      "SELECT URL, Price, Name FROM watcher"
    )
    cursor.execute(command)
    urls_prices_names = cursor.fetchall()
@@ -205,7 +205,7 @@ def auto_check(conn,cursor):
       price_change = compare_price(url_price_name[1], price_now, url_price_name[2])
       if price_change == 'change':
          command = (
-            "UPDATE test SET Price = %s WHERE Name = %s" 
+            "UPDATE watcher SET Price = %s WHERE Name = %s" 
          )
          data = (price_now,url_price_name[2])
          cursor.execute(command,data)
